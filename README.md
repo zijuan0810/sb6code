@@ -1,4 +1,4 @@
-OpenGL SuperBible Example Code
+OpenGL SuperBible Example Code 仅供学习之用
 ------------------------------
 
 This is the example code for the 6th Edition of OpenGL SuperBible.
