@@ -42,41 +42,37 @@ public:
     object();
     ~object();
 
-    inline void render(unsigned int instance_count = 1,
-                       unsigned int base_instance = 0)
+    inline void render(unsigned int instance_count = 1, unsigned int base_instance = 0)
     {
         render_sub_object(0, instance_count, base_instance);
     }
 
-    void render_sub_object(unsigned int object_index,
-                           unsigned int instance_count = 1,
-                           unsigned int base_instance = 0);
+    void render_sub_object(unsigned int object_index, unsigned int instance_count = 1, 
+		unsigned int base_instance = 0);
 
     void get_sub_object_info(unsigned int index, GLuint &first, GLuint &count)
     {
-        if (index >= num_sub_objects)
-        {
+        if (index >= num_sub_objects) {
             first = 0;
             count = 0;
         }
-        else
-        {
+        else {
             first = sub_object[index].first;
             count = sub_object[index].count;
         }
     }
 
     unsigned int get_sub_object_count() const           { return num_sub_objects; }
-    GLuint       get_vao() const                        { return vao; }
+    GLuint       get_vao() const                        { return _vao; }
     void load(const char * filename);
     void free();
 
 private:
-    GLuint                  vertex_buffer;
-    GLuint                  index_buffer;
-    GLuint                  vao;
-    GLuint                  num_indices;
-    GLuint                  index_type;
+    GLuint _vertexBuffer;
+    GLuint _indexBuffer;
+    GLuint _vao;
+    GLuint num_indices;
+    GLuint index_type;
 
     enum { MAX_SUB_OBJECTS = 256 };
 

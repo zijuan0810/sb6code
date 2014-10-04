@@ -32,9 +32,9 @@ namespace sb6
 {
 
 object::object()
-    : vertex_buffer(0),
-      index_buffer(0),
-      vao(0)
+    : _vertexBuffer(0),
+      _indexBuffer(0),
+      _vao(0)
 {
 
 }
@@ -116,37 +116,34 @@ void object::load(const char * filename)
         num_sub_objects = 1;
     }
 
-    glGenBuffers(1, &vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    glGenBuffers(1, &_vertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, vertex_data_chunk->data_size, data + vertex_data_chunk->data_offset, GL_STATIC_DRAW);
 
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+    glGenVertexArrays(1, &_vao);
+    glBindVertexArray(_vao);
 
-    for (i = 0; i < vertex_attrib_chunk->attrib_count; i++)
-    {
+    for (i = 0; i < vertex_attrib_chunk->attrib_count; i++) {
         SB6M_VERTEX_ATTRIB_DECL &attrib_decl = vertex_attrib_chunk->attrib_data[i];
-        glVertexAttribPointer(i,
-                              attrib_decl.size,
-                              attrib_decl.type,
-                              attrib_decl.flags & SB6M_VERTEX_ATTRIB_FLAG_NORMALIZED ? GL_TRUE : GL_FALSE,
-                              attrib_decl.stride,
-                              (GLvoid *)(uintptr_t)attrib_decl.data_offset);
+        glVertexAttribPointer(i, 
+			attrib_decl.size, 
+			attrib_decl.type, 
+			attrib_decl.flags & SB6M_VERTEX_ATTRIB_FLAG_NORMALIZED ? GL_TRUE : GL_FALSE, 
+			attrib_decl.stride, 
+			(GLvoid *)(uintptr_t)attrib_decl.data_offset);
         glEnableVertexAttribArray(i);
     }
 
-    if (index_data_chunk != NULL)
-    {
-        glGenBuffers(1, &index_buffer);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                     index_data_chunk->index_count * (index_data_chunk->index_type == GL_UNSIGNED_SHORT ? sizeof(GLushort) : sizeof(GLubyte)),
-                     data + index_data_chunk->index_data_offset, GL_STATIC_DRAW);
+    if (index_data_chunk != NULL) {
+        glGenBuffers(1, &_indexBuffer);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBuffer);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 
+			index_data_chunk->index_count * (index_data_chunk->index_type == GL_UNSIGNED_SHORT ? sizeof(GLushort) : sizeof(GLubyte)), 
+			data + index_data_chunk->index_data_offset, GL_STATIC_DRAW);
         num_indices = index_data_chunk->index_count;
         index_type = index_data_chunk->index_type;
     }
-    else
-    {
+    else {
         num_indices = vertex_data_chunk->total_vertices;
     }
 
@@ -160,23 +157,23 @@ void object::load(const char * filename)
 
 void object::free()
 {
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vertex_buffer);
-    glDeleteBuffers(1, &index_buffer);
+    glDeleteVertexArrays(1, &_vao);
+    glDeleteBuffers(1, &_vertexBuffer);
+    glDeleteBuffers(1, &_indexBuffer);
 
-    vao = 0;
-    vertex_buffer = 0;
-    index_buffer = 0;
+    _vao = 0;
+    _vertexBuffer = 0;
+    _indexBuffer = 0;
     num_indices = 0;
 }
 
 void object::render_sub_object(unsigned int object_index, unsigned int instance_count, unsigned int base_instance)
 {
-    glBindVertexArray(vao);
+    glBindVertexArray(_vao);
 
 #if defined (__APPLE__)
 
-    if (index_buffer != 0)
+    if (_indexBuffer != 0)
     {
         glDrawElementsInstanced(GL_TRIANGLES,
                                 num_indices,
@@ -192,22 +189,20 @@ void object::render_sub_object(unsigned int object_index, unsigned int instance_
                               instance_count);
     }
 #else
-    if (index_buffer != 0)
-    {
-        glDrawElementsInstancedBaseInstance(GL_TRIANGLES,
-                                            num_indices,
-                                            index_type,
-                                            0,
-                                            instance_count,
-                                            base_instance);
+    if (_indexBuffer != 0) {
+        glDrawElementsInstancedBaseInstance(GL_TRIANGLES, 
+			num_indices, 
+			index_type, 
+			0, 
+			instance_count, 
+			base_instance);
     }
-    else
-    {
-        glDrawArraysInstancedBaseInstance(GL_TRIANGLES,
-                                           sub_object[object_index].first,
-                                           sub_object[object_index].count,
-                                           instance_count,
-                                           base_instance);
+    else {
+        glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 
+			sub_object[object_index].first, 
+			sub_object[object_index].count, 
+			instance_count, 
+			base_instance);
     }
 #endif
 }

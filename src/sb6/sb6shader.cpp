@@ -26,6 +26,7 @@
 #include "GL/gl3w.h"
 
 #include <cstdio>
+#include <string>
 
 namespace sb6
 {
@@ -36,69 +37,52 @@ namespace shader
 extern
 GLuint load(const char * filename, GLenum shader_type, bool check_errors)
 {
-    GLuint result = 0;
-    FILE * fp;
-    size_t filesize;
-    char * data;
-
-    fp = fopen(filename, "rb");
-
-    if (!fp)
-        return 0;
+    FILE* fp = fopen(filename, "rb");
+	if (!fp) {
+		return 0;
+	}
 
     fseek(fp, 0, SEEK_END);
-    filesize = ftell(fp);
+    size_t filesize = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
-    data = new char [filesize + 1];
-
-    if (!data)
-        goto fail_data_alloc;
+    char* data = new char[filesize + 1];
+	if (!data) {
+		return 0;
+	}
 
     fread(data, 1, filesize, fp);
     data[filesize] = 0;
     fclose(fp);
 
-    result = glCreateShader(shader_type);
-
-    if (!result)
-        goto fail_shader_alloc;
-
-    glShaderSource(result, 1, &data, NULL);
+    GLuint nShader = glCreateShader(shader_type);
+	if (nShader == 0) {
+		return nShader;
+	}
+    glShaderSource(nShader, 1, &data, NULL);
 
     delete [] data;
 
-    glCompileShader(result);
+    glCompileShader(nShader);
 
-    if (check_errors)
-    {
+	// Check the shader error
+    if (check_errors) {
         GLint status = 0;
-        glGetShaderiv(result, GL_COMPILE_STATUS, &status);
+        glGetShaderiv(nShader, GL_COMPILE_STATUS, &status);
 
-        if (!status)
-        {
-            char buffer[4096];
-            glGetShaderInfoLog(result, 4096, NULL, buffer);
-#ifdef _WIN32
-            OutputDebugStringA(filename);
-            OutputDebugStringA(":");
-            OutputDebugStringA(buffer);
-            OutputDebugStringA("\n");
-#else
+        if (status == GL_FALSE) {
+			GLint nLength = 0;
+			glGetShaderiv(nShader, GL_INFO_LOG_LENGTH, &nLength);
+
+			char buffer[1024] = { 0 };
+            glGetShaderInfoLog(nShader, nLength, NULL, buffer);
             fprintf(stderr, "%s: %s\n", filename, buffer);
-#endif
-            goto fail_compile_shader;
+
+			glDeleteShader(nShader);
         }
     }
 
-    return result;
-
-fail_compile_shader:
-    glDeleteShader(result);
-
-fail_shader_alloc:;
-fail_data_alloc:
-    return result;
+    return nShader;
 }
 
 }
@@ -106,51 +90,35 @@ fail_data_alloc:
 namespace program
 {
 
-GLuint link_from_shaders(const GLuint * shaders,
-                         int shader_count,
-                         bool delete_shaders,
-                         bool check_errors)
+GLuint link_from_shaders(const GLuint* shaders, int shader_count, bool bDeleteShader, bool bCheckError)
 {
-    int i;
-
-    GLuint program;
-
-    program = glCreateProgram();
-
-    for (i = 0; i < shader_count; i++)
-    {
-        glAttachShader(program, shaders[i]);
+    GLuint nProgram = glCreateProgram();
+    for (int i = 0; i < shader_count; i++) {
+        glAttachShader(nProgram, shaders[i]);
     }
 
-    glLinkProgram(program);
+    glLinkProgram(nProgram);
 
-    if (check_errors)
-    {
+    if (bCheckError) {
         GLint status;
-        glGetProgramiv(program, GL_LINK_STATUS, &status);
+        glGetProgramiv(nProgram, GL_LINK_STATUS, &status);
 
-        if (!status)
-        {
-            char buffer[4096];
-            glGetProgramInfoLog(program, 4096, NULL, buffer);
-#ifdef _WIN32
-            OutputDebugStringA(buffer);
-            OutputDebugStringA("\n");
-#endif
-            glDeleteProgram(program);
+        if (!status) {
+			char buffer[1024] = { 0 };
+            glGetProgramInfoLog(nProgram, 1024, NULL, buffer);
+            fprintf(stderr, "link error: %s\n", buffer);
+            glDeleteProgram(nProgram);
             return 0;
         }
     }
 
-    if (delete_shaders)
-    {
-        for (i = 0; i < shader_count; i++)
-        {
+    if (bDeleteShader) {
+        for (int i = 0; i < shader_count; i++) {
             glDeleteShader(shaders[i]);
         }
     }
 
-    return program;
+    return nProgram;
 }
 
 }

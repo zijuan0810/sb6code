@@ -8,24 +8,17 @@
 class simpletexcoords_app: public sb6::application
 {
 public:
-    simpletexcoords_app()
-        : render_prog(0),
-          tex_index(0)
-    {
+    simpletexcoords_app() : render_prog(0), tex_index(0) {
     }
 
 protected:
-    void init()
-    {
+    void init() {
         static const char title[] = "OpenGL SuperBible - Texture Coordinates";
-
         sb6::application::init();
-
         memcpy(info.title, title, sizeof(title));
     }
 
-    virtual void startup()
-    {
+    virtual void startup() {
 #define B 0x00, 0x00, 0x00, 0x00
 #define W 0xFF, 0xFF, 0xFF, 0xFF
         static const GLubyte tex_data[] =
@@ -52,8 +45,20 @@ protected:
 
         glGenTextures(1, &tex_object[0]);
         glBindTexture(GL_TEXTURE_2D, tex_object[0]);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, 16, 16);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
+		// Allocate storage for the texture
+        glTexStorage2D(
+			GL_TEXTURE_2D,	// 2D texture
+			1,				// 1 mipmap level
+			GL_RGB8,			// RGB8 internal format
+			16, 16);			// 16 x 16 texels
+		// Specify a two-dimensional texture subimage
+        glTexSubImage2D(
+			GL_TEXTURE_2D,	// 2D texture
+			0,				// Specifies the level-of-detail number. Level 0 is the base image level
+			0, 0, 16, 16,	// Specifies the image area Rect(0, 0, 16, 16)
+			GL_RGBA,			// Specifies the format of the pixel data
+			GL_UNSIGNED_BYTE, // Specifies the data type of the pixel data
+			tex_data);		// Specifies a pointer to the image data in memory
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -67,8 +72,7 @@ protected:
         glDepthFunc(GL_LEQUAL);
     }
 
-    virtual void render(double currentTime)
-    {
+    virtual void render(double currentTime) {
         static const GLfloat gray[] = { 0.2f, 0.2f, 0.2f, 1.0f };
         static const GLfloat ones[] = { 1.0f };
 
